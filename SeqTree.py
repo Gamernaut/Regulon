@@ -29,8 +29,8 @@ class RE_seq_tree():
         self.tree_depth = 0
         self.DNA_sequence = ""
         self.sequence_count = 0
-        self.re_filename = ""   # If a new request to create with same file ane then we can just pass the root back (singelton type idea)
-        self.re_file_hashcode = 0  # MOre robust test in case the content sof the file has changed but not the name, the hashcode will pick up the difference.
+        self.re_filename = ""   # If a new request to create with same file then we can just pass the root back (singelton type idea)
+        self.re_file_hashcode = 0  # More robust test in case the content of the file has changed but not the name, the hashcode will pick up the difference.
         # Currently pulled out as Result_Manager as a separate implementation,
         # something that manages the matches for this combination and run
         # self.matches = dict()
@@ -46,6 +46,7 @@ class RE_seq_tree():
 
     def get_sequence_count(self):
         return self.sequence_count
+
 
 
 if __name__ == '__main__':

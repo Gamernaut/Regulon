@@ -33,5 +33,6 @@ def import_restriction_enzymes(filename):
 
 
 def import_seq_file(seq_filename):
+    # TODO: implement the FASTA file read
     pass
     return

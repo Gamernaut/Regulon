@@ -3,6 +3,7 @@
 .idea/
 venv/
 "Tree Structure.pptx"
+"SmallRE2.txt"
 
 # Compiled source #
 ###################
@@ -42,3 +43,4 @@ venv/
 ehthumbs.db
 Thumbs.db
 /Tree Structure.pptx
+/SmallRE2.txt

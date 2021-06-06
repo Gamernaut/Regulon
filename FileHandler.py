@@ -4,11 +4,12 @@
 import re
 
 
-def import_restriction_enzymes(self, filename):
+def import_restriction_enzymes(filename):
     """Reads the file with restriction enzyme recognition sequences and names, parses them and adds them to a
-    dictionary. Returns the dictionary and the number of sequences imported."""
+    dictionary. Returns the dictionary and the length of the longest sequence"""
     sequence_dict = {}
     count = 0
+    tree_depth = 0
     try:
         with open(filename, "r") as RE_file:
             for line in RE_file:
@@ -22,14 +23,13 @@ def import_restriction_enzymes(self, filename):
                 # offset info in brackets for example ACCTGC(4/8),BspMI/BfuAI
                 sequence_dict[line.split(',')[0]] = line.split(',')[1]
                 sequence_length = len(line.split(',')[0])
-                if self.tree_depth < sequence_length:
-                    self.tree_depth = sequence_length
+                if tree_depth < sequence_length:
+                    tree_depth = sequence_length
                 count += 1
         RE_file.close()
-        self.sequence_count = count - 1
     except Exception as err:
-        print("DNA_Tree.import_restriction_enzymes error:", err)
-    return sequence_dict, self.sequence_count
+        print(f"\nERROR - FileHandler.import_restriction_enzymes() had a problem with the file: {filename}.\nError was: ", err)
+    return sequence_dict, tree_depth
 
 
 def import_seq_file(seq_filename):

@@ -1,7 +1,9 @@
 # Module to create and search the tree based data structure of restriction enzyme sequences
 
+# Import standard modules
+import sys
+import time
 # import utility module to handle reading the source files
-
 import FileHandler
 
 
@@ -19,9 +21,8 @@ class Node(object):
         self.is_leaf = None
 
 
-class RE_seq_tree():
-    """This is the class that represents the restriction enzyme (RE) sequence tree which is made up of the Node class
-    above """
+class RESeqTree:
+    """This is the class that represents the restriction enzyme (RE) sequence tree which is made up of the Node class"""
 
     def __init__(self):
         self.root = Node()
@@ -29,8 +30,10 @@ class RE_seq_tree():
         self.tree_depth = 0
         self.DNA_sequence = ""
         self.sequence_count = 0
-        self.re_filename = ""   # If a new request to create with same file then we can just pass the root back (singelton type idea)
-        self.re_file_hashcode = 0  # More robust test in case the content of the file has changed but not the name, the hashcode will pick up the difference.
+        # If a new request to create tree with same file then we can just pass the root back (singleton type idea)
+        self.re_filename = ""
+        # More robust test in case the content of the file has changed but not the name, MD5 will pick up the difference
+        self.re_file_MD5_checksum = 0
         # Currently pulled out as Result_Manager as a separate implementation,
         # something that manages the matches for this combination and run
         # self.matches = dict()
@@ -47,14 +50,170 @@ class RE_seq_tree():
     def get_sequence_count(self):
         return self.sequence_count
 
+    def build_tree(self, filename):
+        # Check if the file being passed to us is the same as the existing source for the current tree.
+        # If so just pass back the root which is a simple way to support multiple runs in a future version.
+        # TODO: Using a hashcode to check the content of the file is a much better way to ensure that the file
+        # contents have not been changed even if the name stays the same
+
+        if filename == self.re_filename:
+            return self.get_root()
+
+        # It's a new file so we need a new tree, set the name so the check above will catch the reuse of the file
+        self.re_filename = filename
+
+        # Call the function to load the sequences from the restriction enzyme definition file
+        re_seq_dict, self.tree_depth = FileHandler.import_restriction_enzymes(filename)
+
+        # Calculate the progress of the tree build and display this to the user
+        current_seq_count = 1
+        sequences_to_build = len(re_seq_dict)
+        for seq, re_name in re_seq_dict.items():
+            pct_complete = (current_seq_count/sequences_to_build) * 100
+            sys.stdout.write(f"\rProcessing Restriction Enzymes sequences from {filename}: %d%% completed " % pct_complete)  # print on the same line
+            self.insert_sequence(self.root, seq, re_name)
+            current_seq_count += 1
+            time.sleep(0.02)
+        print()
+
+    def insert_sequence(self, node, sequence, name):
+        if len(sequence) <= 0:
+            node.RE_list.append(name)
+            node.is_leaf = True
+            self.tree_width += 1
+            return
+        current_base = sequence[0]
+        new_sequence = sequence[1:]
+        # These are the 4 basic nucleotides
+        if current_base == "A":
+            self.insert_A(current_base, name, new_sequence, node)
+        elif current_base == "C":
+            self.insert_C(current_base, name, new_sequence, node)
+        elif current_base == "G":
+            self.insert_G(current_base, name, new_sequence, node)
+        elif current_base == "T":
+            self.insert_T(current_base, name, new_sequence, node)
+
+        # Support for DNA ambiguity codes from https://www.dnabaser.com/articles/IUPAC%20ambiguity%20codes.html
+        # The following are combinations of 2 nucleotides
+        elif current_base == "Y":  # Pyrimidine (C or T)
+            self.insert_C("C", name, new_sequence, node)
+            self.insert_T("T", name, new_sequence, node)
+        elif current_base == "R":  # Purine (A or G)
+            self.insert_A("A", name, new_sequence, node)
+            self.insert_G("G", name, new_sequence, node)
+        elif current_base == "W":  # Weak (A or T)
+            self.insert_A("A", name, new_sequence, node)
+            self.insert_T("T", name, new_sequence, node)
+        elif current_base == "S":  # Strong (G or C)
+            self.insert_C("C", name, new_sequence, node)
+            self.insert_G("G", name, new_sequence, node)
+        elif current_base == "K":  # Keto (T or G)
+            self.insert_G("G", name, new_sequence, node)
+            self.insert_T("T", name, new_sequence, node)
+        elif current_base == "M":  # Amino (A or C)
+            self.insert_A("A", name, new_sequence, node)
+            self.insert_C("C", name, new_sequence, node)
+
+        # The following are combinations of 3 nucleotides
+        elif current_base == "D":  # A, G and T (not C)
+            self.insert_A("A", name, new_sequence, node)
+            self.insert_G("G", name, new_sequence, node)
+            self.insert_T("T", name, new_sequence, node)
+        elif current_base == "V":  # A, C and G (not T)
+            self.insert_A("A", name, new_sequence, node)
+            self.insert_C("C", name, new_sequence, node)
+            self.insert_G("G", name, new_sequence, node)
+        elif current_base == "H":  # A, C and T (not G)
+            self.insert_A("A", name, new_sequence, node)
+            self.insert_C("C", name, new_sequence, node)
+            self.insert_T("T", name, new_sequence, node)
+        elif current_base == "B":  # C, G and T (not A)
+            self.insert_C("C", name, new_sequence, node)
+            self.insert_G("G", name, new_sequence, node)
+            self.insert_T("T", name, new_sequence, node)
+
+        # The following is all 4 nucleotides
+        elif current_base == "N" or current_base == "X":  # All nucleotides (A, C, G and T)
+            self.insert_A("A", name, new_sequence, node)
+            self.insert_C("C", name, new_sequence, node)
+            self.insert_G("G", name, new_sequence, node)
+            self.insert_T("T", name, new_sequence, node)
+        else:
+            print("Nucleotide", current_base, "not supported in SeqTree.insert_sequence()")
+
+    def insert_A(self, current_base, name, new_sequence, node):
+        if node.A is None:
+            new_node = Node(current_base)
+            node.A = new_node
+            self.insert_sequence(new_node, new_sequence, name)
+        else:
+            self.insert_sequence(node.A, new_sequence, name)
+
+    def insert_C(self, current_base, name, new_sequence, node):
+        if node.C is None:
+            new_node = Node(current_base)
+            node.C = new_node
+            self.insert_sequence(new_node, new_sequence, name)
+        else:
+            self.insert_sequence(node.C, new_sequence, name)
+
+    def insert_G(self, current_base, name, new_sequence, node):
+        if node.G is None:
+            new_node = Node(current_base)
+            node.G = new_node
+            self.insert_sequence(new_node, new_sequence, name)
+        else:
+            self.insert_sequence(node.G, new_sequence, name)
+
+    def insert_T(self, current_base, name, new_sequence, node):
+        if node.T is None:
+            new_node = Node(current_base)
+            node.T = new_node
+            self.insert_sequence(new_node, new_sequence, name)
+        else:
+            self.insert_sequence(node.T, new_sequence, name)
+
+    # TODO:implement search function
+    def find_matches(self, filename, result_manager):
+        pass
+
+    def print_branch(self, node):
+        if node is None:
+            print("No valid tree node provided to SeqTree.print_branch()")
+            return
+        self.DNA_sequence = self.DNA_sequence + node.nucleotide
+        if node.is_leaf:
+            print(self.DNA_sequence, "->", ', '.join(node.RE_list))	# replaces [] from std List print with ","
+        if node.A:
+            self.print_branch(node.A)
+            self.DNA_sequence = self.DNA_sequence[:-1]
+        if node.C:
+            self.print_branch(node.C)
+            self.DNA_sequence = self.DNA_sequence[:-1]
+        if node.G:
+            self.print_branch(node.G)
+            self.DNA_sequence = self.DNA_sequence[:-1]
+        if node.T:
+            self.print_branch(node.T)
+            self.DNA_sequence = self.DNA_sequence[:-1]
+
+    # TODO:implement print function
+    def print_tree(self, node):
+        if node is None:
+            print("ERROR - No root passed to print_tree function")
+            return
+        if self.get_root().A:
+            self.print_branch(self.get_root().A)
+
 
 
 if __name__ == '__main__':
-    root = Node()
-    insert_sequence(root, "TACGTT", "AclI")
-    insert_sequence(root, "AAGCTT", "HindIII")
-    insert_sequence(root, "AATATT", "SspI")
-    insert_sequence(root, "AATY", "MluCI_Y")
-    insert_sequence(root, "AATR", "MluCI_R")
-    insert_sequence(root, "AAGCTT", "HindIII V2")
-    print_tree(root)
+    root = RESeqTree()
+    RESeqTree.insert_sequence(root, "TACGTT", "AclI")
+    RESeqTree.insert_sequence(root, "AAGCTT", "HindIII")
+    RESeqTree.insert_sequence(root, "AATATT", "SspI")
+    RESeqTree.insert_sequence(root, "AATY", "MluCI_Y")
+    RESeqTree.insert_sequence(root, "AATR", "MluCI_R")
+    RESeqTree.insert_sequence(root, "AAGCTT", "HindIII V2")
+    RESeqTree.print_tree(root)

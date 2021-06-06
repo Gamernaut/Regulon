@@ -1,8 +1,8 @@
 # module to hold the matches that were found
 
 class Result_Manager():
-    """ This class holds the results of a particular search and is specific to a combination of RE sequences
-     and DNA sequence"""
+    """ This class holds the results of a particular search and is specific to the combination of RE sequences
+     and DNA sequences used in the search"""
 
     def __init__(self, re_file, seq_file, out_file=None):
         self.re_file = re_file
@@ -17,6 +17,6 @@ class Result_Manager():
     def print_matches(self):
         """Function to output the matches to the file specified"""
         if self.out_file is not None:
-            print(f"Printing results to file: {self.out_file}")
+            print(f"Printing results to file: {self.out_file}")     # DEBUG
         else:
-            print(f"Printing results to screen")
+            print(f"Printing results to screen")        # DEBUG

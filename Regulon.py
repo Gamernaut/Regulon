@@ -1,4 +1,14 @@
-# Main entry point for program
+#################################################################
+#
+#   Author:     Camelo Volpe
+#
+#   Date:       June 2021
+#
+#   Usage:      Regulon re_file=filename seq_file=filename [out_file=filename] -options
+#
+#   This File:  Main entry point of program
+#
+#################################################################
 
 import sys
 import SeqTree
@@ -57,27 +67,26 @@ def parse_command_line():
 if __name__ == "__main__":
     parse_success = parse_command_line()
     if parse_success:
-        print(files)  # DEBUG
         # For each run:
-        # 1) Initialise a results manager which holds the results of a particular search with a specific combination of RE seqeunces and a DNA sequence
+        # 1) Initialise a results manager which holds the results of a particular search with a specific combination
+        # of Restriction Enzyme (RE) seqeunces and a DNA sequence
         result_manager = ResultManager.Result_Manager(files["re_file"], files["seq_file"], files["out_file"])
-        # my_result_manager.print_files_used()   # DEBUG
 
-        # 2) Step that requests the root of a newly created tree if one doesn't already exist for the current RE
-        # file (based on file name or maybe Hashcode in future version).
-        # If one does exist it just gets the root of that tree.
-        current_search_tree = SeqTree.RESeqTree()
-        if not current_search_tree:
+        # 2) Load Restriction Enzyme (RE) definition file into tree
+        # First get a root node
+        current_RE_tree = SeqTree.RESeqTree()
+        if not current_RE_tree:
             print("Couldn't create search tree")
             exit(-1)
 
-        # We have a valid root so build the tree with the sequences in the Restriction Enzyme Definition file
-        current_search_tree.build_tree(files["re_file"])
+        # We have a valid root node so build the tree with the sequences in the Restriction Enzyme Definition file
+        current_RE_tree.build_tree(files["re_file"])
+
+        # DEBUG
+        current_RE_tree.print_tree()
 
         # 3) Search the tree using a specific sequence file in FASTA format, storing any matches in the results manager
-        current_search_tree.find_matches(files["seq_file"], result_manager)
+        current_RE_tree.find_matches(files["seq_file"], result_manager)
 
         # 4) Results manager dispays the results or saves to file depending on command line arguments used
-        # display_mode = files["out_file"] # DEBUG
-        # print(f"Display option set to: {display_mode}") #DEBUG
         result_manager.print_matches()

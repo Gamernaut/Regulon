@@ -16,12 +16,18 @@ def import_restriction_enzymes(filename):
                 if count == 0:
                     count += 1
                     continue
-                line = line.replace('/', '')  # remove the cutting site in the sequence
+                #line = line.replace('/', '')  # remove the cutting site in the sequence
                 line = line.replace('\n', '')  # remove the newline character
-                line = re.sub("[\(\[].*?[\)\]]", "",
-                              line)  # removes brackets and the contents for some sequences have extra
+                #line = re.sub("[\(\[].*?[\)\]]", "",
+                #              line)  # removes brackets and the contents as some sequences have extra
                 # offset info in brackets for example ACCTGC(4/8),BspMI/BfuAI
-                sequence_dict[line.split(',')[0]] = line.split(',')[1]
+                # TODO: Split the line then remove brackets so the / between RE names are preserved
+                # could also try this s = ''.join(filter(str.isalnum, s)) to strip out everything that's not a character
+                re_seq = line.split(',')[0]
+                re_seq = ''.join(filter(str.isalpha, re_seq))
+                re_name = line.split(',')[1]
+                # sequence_dict[re_seq] = re_name
+                sequence_dict[re_name] = re_seq
                 sequence_length = len(line.split(',')[0])
                 if tree_depth < sequence_length:
                     tree_depth = sequence_length

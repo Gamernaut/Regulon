@@ -3,6 +3,7 @@
 # Import standard modules
 import sys
 import time
+import pprint
 # import utility module to handle reading the source files
 import FileHandler
 
@@ -18,7 +19,7 @@ class Node(object):
         self.T = None
         self.nucleotide = base
         self.RE_list = []  # supports several RE names for the same sequence
-        self.is_leaf = None
+        self.is_branch_end = None
 
 
 class RESeqTree:
@@ -28,8 +29,19 @@ class RESeqTree:
         self.root = Node()
         self.tree_width = 0
         self.tree_depth = 0
-        self.DNA_sequence = ""
+
+        # Next 2 attributes are used by the Print Tree function
+        self.branch_sequence = ""
+        self.tree_sequences = []
+
+        # Following is to support new dict based approach to print tree
+        self.re_seq_dict = {}
+
+
+        # Used to calculate progress in loading Restriction Enzyme definition file and creating tree
         self.sequence_count = 0
+        self.unique_sequence_count = 0
+
         # If a new request to create tree with same file then we can just pass the root back (singleton type idea)
         self.re_filename = ""
         # More robust test in case the content of the file has changed but not the name, MD5 will pick up the difference
@@ -63,23 +75,27 @@ class RESeqTree:
         self.re_filename = filename
 
         # Call the function to load the sequences from the restriction enzyme definition file
-        re_seq_dict, self.tree_depth = FileHandler.import_restriction_enzymes(filename)
+        self.re_seq_dict, self.tree_depth = FileHandler.import_restriction_enzymes(filename)
+
+        # TODO: can we use the re_seq_dict as part of the print tree method?? Maybe print out the RE name then the sequences
 
         # Calculate the progress of the tree build and display this to the user
         current_seq_count = 1
-        sequences_to_build = len(re_seq_dict)
-        for seq, re_name in re_seq_dict.items():
+        sequences_to_build = len(self.re_seq_dict)
+        for re_name, seq in self.re_seq_dict.items():
             pct_complete = (current_seq_count/sequences_to_build) * 100
             sys.stdout.write(f"\rProcessing Restriction Enzymes sequences from {filename}: %d%% completed " % pct_complete)  # print on the same line
             self.insert_sequence(self.root, seq, re_name)
             current_seq_count += 1
             time.sleep(0.02)
         print()
+        # print(re_seq_dict)  # DEBUG
 
     def insert_sequence(self, node, sequence, name):
         if len(sequence) <= 0:
             node.RE_list.append(name)
-            node.is_leaf = True
+            node.is_branch_end = True
+            self.unique_sequence_count += 1
             self.tree_width += 1
             return
         current_base = sequence[0]
@@ -174,7 +190,7 @@ class RESeqTree:
         else:
             self.insert_sequence(node.T, new_sequence, name)
 
-    # TODO:implement search function
+    # TODO: Implement search function
     def find_matches(self, filename, result_manager):
         pass
 
@@ -182,38 +198,39 @@ class RESeqTree:
         if node is None:
             print("No valid tree node provided to SeqTree.print_branch()")
             return
-        self.DNA_sequence = self.DNA_sequence + node.nucleotide
-        if node.is_leaf:
-            print(self.DNA_sequence, "->", ', '.join(node.RE_list))	# replaces [] from std List print with ","
+        # Add the nucleotide in the current node to the sequence constructed so far (from previous calls)
+        # If it's the root there is no nucleotide so skip this
+        if node.nucleotide:
+            self.branch_sequence = self.branch_sequence + node.nucleotide
+        if node.is_branch_end:
+            # TODO: Change code to have RE name first then list sequences
+            # eg. BsaJI
+            #       CCCGGG
+            #       CCCTGG
+            temp = self.branch_sequence+" -> "+', '.join(node.RE_list)  # replaces [] from std List print with ","
+            self.tree_sequences.append(temp)
+
         if node.A:
             self.print_branch(node.A)
-            self.DNA_sequence = self.DNA_sequence[:-1]
+            # as you come up the call stack remove this nucleotide
+            self.branch_sequence = self.branch_sequence[:-1]
         if node.C:
             self.print_branch(node.C)
-            self.DNA_sequence = self.DNA_sequence[:-1]
+            self.branch_sequence = self.branch_sequence[:-1]
         if node.G:
             self.print_branch(node.G)
-            self.DNA_sequence = self.DNA_sequence[:-1]
+            self.branch_sequence = self.branch_sequence[:-1]
         if node.T:
             self.print_branch(node.T)
-            self.DNA_sequence = self.DNA_sequence[:-1]
+            self.branch_sequence = self.branch_sequence[:-1]
 
-    # TODO:implement print function
-    def print_tree(self, node):
-        if node is None:
-            print("ERROR - No root passed to print_tree function")
+    def print_tree(self):
+        root = self.get_root()
+        if root:
+            self.print_branch(root)
+        else:
+            print("ERROR - Can't get root for tree")
             return
-        if self.get_root().A:
-            self.print_branch(self.get_root().A)
-
-
-
-if __name__ == '__main__':
-    root = RESeqTree()
-    RESeqTree.insert_sequence(root, "TACGTT", "AclI")
-    RESeqTree.insert_sequence(root, "AAGCTT", "HindIII")
-    RESeqTree.insert_sequence(root, "AATATT", "SspI")
-    RESeqTree.insert_sequence(root, "AATY", "MluCI_Y")
-    RESeqTree.insert_sequence(root, "AATR", "MluCI_R")
-    RESeqTree.insert_sequence(root, "AAGCTT", "HindIII V2")
-    RESeqTree.print_tree(root)
+        print(f"\nThis tree has {self.unique_sequence_count} unique restriction enzyme sequences")
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(self.tree_sequences)

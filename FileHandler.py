@@ -1,9 +1,5 @@
 # Module for reading restriction enzyme file and FASTA DNA sequence files
 
-# used to remove text between brackets in imported sequences
-import re
-
-
 def import_restriction_enzymes(filename):
     """Reads the file with restriction enzyme recognition sequences and names, parses them and adds them to a
     dictionary. Returns the dictionary and the length of the longest sequence"""

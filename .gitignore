@@ -4,6 +4,7 @@
 venv/
 "Tree Structure.pptx"
 "SmallRE2.txt"
+"LPL.fna"
 
 # Compiled source #
 ###################
@@ -44,3 +45,4 @@ ehthumbs.db
 Thumbs.db
 /Tree Structure.pptx
 /SmallRE2.txt
+/LPL.fna

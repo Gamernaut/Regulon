@@ -37,7 +37,6 @@ class RESeqTree:
         # Following is to support new dict based approach to print tree
         self.re_seq_dict = {}
 
-
         # Used to calculate progress in loading Restriction Enzyme definition file and creating tree
         self.sequence_count = 0
         self.unique_sequence_count = 0
@@ -65,7 +64,7 @@ class RESeqTree:
     def build_tree(self, filename):
         # Check if the file being passed to us is the same as the existing source for the current tree.
         # If so just pass back the root which is a simple way to support multiple runs in a future version.
-        # TODO: Using a hashcode to check the content of the file is a much better way to ensure that the file
+        # Using a hashcode to check the content of the file is a much better way to ensure that the file
         # contents have not been changed even if the name stays the same
 
         if filename == self.re_filename:
@@ -77,14 +76,13 @@ class RESeqTree:
         # Call the function to load the sequences from the restriction enzyme definition file
         self.re_seq_dict, self.tree_depth = FileHandler.import_restriction_enzymes(filename)
 
-        # TODO: can we use the re_seq_dict as part of the print tree method?? Maybe print out the RE name then the sequences
-
         # Calculate the progress of the tree build and display this to the user
         current_seq_count = 1
         sequences_to_build = len(self.re_seq_dict)
         for re_name, seq in self.re_seq_dict.items():
-            pct_complete = (current_seq_count/sequences_to_build) * 100
-            sys.stdout.write(f"\rProcessing Restriction Enzymes sequences from {filename}: %d%% completed " % pct_complete)  # print on the same line
+            pct_complete = (current_seq_count / sequences_to_build) * 100
+            sys.stdout.write(f"\rProcessing Restriction Enzymes sequences from {filename}: %d%% completed"
+                             % pct_complete)  # Prints on the same line
             self.insert_sequence(self.root, seq, re_name)
             current_seq_count += 1
             time.sleep(0.02)
@@ -192,7 +190,8 @@ class RESeqTree:
 
     # TODO: Implement search function
     def find_matches(self, filename, result_manager):
-        pass
+        dna_sequence = FileHandler.import_seq_file(filename)
+        print(f"DNA sequence is {len(dna_sequence)} bases long")
 
     def print_branch(self, node):
         if node is None:
@@ -203,11 +202,7 @@ class RESeqTree:
         if node.nucleotide:
             self.branch_sequence = self.branch_sequence + node.nucleotide
         if node.is_branch_end:
-            # TODO: Change code to have RE name first then list sequences
-            # eg. BsaJI
-            #       CCCGGG
-            #       CCCTGG
-            temp = self.branch_sequence+" -> "+', '.join(node.RE_list)  # replaces [] from std List print with ","
+            temp = self.branch_sequence + " -> " + ', '.join(node.RE_list)  # replaces [] from std List print with ","
             self.tree_sequences.append(temp)
 
         if node.A:

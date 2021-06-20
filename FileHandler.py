@@ -1,4 +1,15 @@
-# Module for reading restriction enzyme file and FASTA DNA sequence files
+#############################################################################
+#
+#   Author:     Camelo Volpe
+#
+#   Date:       June 2021
+#
+#   Usage:      Used by main script SeqTree.py
+#
+#   This File:  Utility functions to import the reference sequences from
+#               re_file=filename and the DNA sequence from seq_file=filename
+#
+#############################################################################
 
 def import_restriction_enzymes(filename):
     """Reads the file with restriction enzyme recognition sequences and names, parses them and adds them to a

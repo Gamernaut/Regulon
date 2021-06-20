@@ -1,4 +1,16 @@
-# Module to create and search the tree based data structure of restriction enzyme sequences
+#############################################################################
+#
+#   Author:     Camelo Volpe
+#
+#   Date:       June 2021
+#
+#   Usage:      Used by main script Regulon.py
+#
+#   This File:  Creates the tree data structure to represent the
+#               various reference sequences from the re_file=filename
+#               and then searches for these in the seq_file=filename file
+#
+#############################################################################
 
 # Import standard modules
 import sys
@@ -191,14 +203,15 @@ class RESeqTree:
     def find_matches(self, filename, result_manager):
         dna_sequence = FileHandler.import_seq_file(filename)
         dna_seq_length = len(dna_sequence)
-        print(f"DNA sequence is {dna_seq_length} bases long")
+        print(f"DNA sequence is {dna_seq_length} nucleotides long")
         ref_seq_length = self.get_tree_depth()
-        print(f"Longest reference sequence is {ref_seq_length} bases long")
+        print(f"Longest reference sequence is {ref_seq_length} nucleotides long")
         node = self.get_root()
 
         # To optimise search limit the number of nucleotides beyond the current sequence read to the length of the
-        # longest reference sequence in the tree i.e tree_depth.
-        for pos in range(dna_seq_length):
+        # longest reference sequence in the tree i.e tree_depth but the shortest sequence ever likely to be used is
+        # 4 nucleotides long so stop 4 short of the end of the sequence to avoid an IndexError: out of bounds error
+        for pos in range(dna_seq_length - 4):
             if pos + ref_seq_length > dna_seq_length:
                 search_window_end = dna_seq_length
             else:

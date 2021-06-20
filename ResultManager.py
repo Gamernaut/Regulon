@@ -10,6 +10,9 @@ class Result_Manager():
         self.out_file = out_file
         self.matches = dict()
 
+    def add_match(self, position, ref_seq_name):
+        self.matches[position] = ref_seq_name
+
     def print_files_used(self):
         print(f"RE file: {self.re_file}")
         print(f"Seq file: {self.seq_file}")

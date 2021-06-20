@@ -83,7 +83,7 @@ if __name__ == "__main__":
         current_RE_tree.build_tree(files["re_file"])
 
         # DEBUG
-        current_RE_tree.print_tree()
+        # current_RE_tree.print_tree()
 
         # 3) Search the tree using a specific sequence file in FASTA format, storing any matches in the results manager
         current_RE_tree.find_matches(files["seq_file"], result_manager)

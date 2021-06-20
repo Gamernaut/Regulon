@@ -188,10 +188,71 @@ class RESeqTree:
         else:
             self.insert_sequence(node.T, new_sequence, name)
 
-    # TODO: Implement search function
     def find_matches(self, filename, result_manager):
         dna_sequence = FileHandler.import_seq_file(filename)
-        print(f"DNA sequence is {len(dna_sequence)} bases long")
+        dna_seq_length = len(dna_sequence)
+        print(f"DNA sequence is {dna_seq_length} bases long")
+        ref_seq_length = self.get_tree_depth()
+        print(f"Longest reference sequence is {ref_seq_length} bases long")
+        node = self.get_root()
+
+        # To optimise search limit the number of nucleotides beyond the current sequence read to the length of the
+        # longest reference sequence in the tree i.e tree_depth.
+        for pos in range(dna_seq_length):
+            if pos + ref_seq_length > dna_seq_length:
+                search_window_end = dna_seq_length
+            else:
+                search_window_end = pos + ref_seq_length
+            dna_sub_sequence = dna_sequence[pos:search_window_end]
+            if dna_sub_sequence[0] == "A" and node.A:
+                self.search_branch(node.A, dna_sub_sequence, pos)
+            if dna_sub_sequence[0] == "C" and node.C:
+                self.search_branch(node.C, dna_sub_sequence, pos)
+            if dna_sub_sequence[0] == "G" and node.G:
+                self.search_branch(node.G, dna_sub_sequence, pos)
+            if dna_sub_sequence[0] == "T" and node.T:
+                self.search_branch(node.T, dna_sub_sequence, pos)
+
+    def search_branch(self, node, dna_sub_sequence, position):
+        if node is None:
+            print("No valid tree node provided to SeqTree.search_branch()")
+            return
+        if node.is_branch_end:
+            # TODO: make it work with ResultManager
+            # Add the current
+            #if position in self.matches:
+            #    print("Duplicate position match at ", position)
+            #    print("Dictionary contains", self.matches[position])
+            #    print("trying to add", node.RE_list)
+            #    # get the existing list for this key
+            #    re_list = self.matches[position]
+            #    # Use extend to combine the 2 lists but keep them flat. Append would nest one list inside the other.
+            #    re_list.extend(node.RE_list)
+            #    # convert to set to remove duplicates the back to list
+            #    re_list = list(set(re_list))
+            #    # overwrite existing entry with new list
+            #    self.matches[position] = re_list
+            #    print("Dict now reads ->", self.matches[position])
+            #else:
+            # Add the names of the reference sequences and the original position to the results manager dictionary
+            # self.matches[position] = node.RE_list
+
+            # need to add 1 to position because loop starts from 0
+            print(f"found match at {position + 1} for {node.RE_list}")
+            return
+        dna_sub_sequence = dna_sub_sequence[1:]
+        if dna_sub_sequence[0] == "A" and node.A:
+            self.search_branch(node.A, dna_sub_sequence, position)
+            return
+        if dna_sub_sequence[0] == "C" and node.C:
+            self.search_branch(node.C, dna_sub_sequence, position)
+            return
+        if dna_sub_sequence[0] == "G" and node.G:
+            self.search_branch(node.G, dna_sub_sequence, position)
+            return
+        if dna_sub_sequence[0] == "T" and node.T:
+            self.search_branch(node.T, dna_sub_sequence, position)
+            return
 
     def print_branch(self, node):
         if node is None:
@@ -204,19 +265,21 @@ class RESeqTree:
         if node.is_branch_end:
             temp = self.branch_sequence + " -> " + ', '.join(node.RE_list)  # replaces [] from std List print with ","
             self.tree_sequences.append(temp)
-
         if node.A:
             self.print_branch(node.A)
-            # as you come up the call stack remove this nucleotide
+            # as you come back up the call stack remove this nucleotide
             self.branch_sequence = self.branch_sequence[:-1]
         if node.C:
             self.print_branch(node.C)
+            # as you come back up the call stack remove this nucleotide
             self.branch_sequence = self.branch_sequence[:-1]
         if node.G:
             self.print_branch(node.G)
+            # as you come back up the call stack remove this nucleotide
             self.branch_sequence = self.branch_sequence[:-1]
         if node.T:
             self.print_branch(node.T)
+            # as you come back up the call stack remove this nucleotide
             self.branch_sequence = self.branch_sequence[:-1]
 
     def print_tree(self):

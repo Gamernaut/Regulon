@@ -12,7 +12,7 @@ Again not to complex, however, the following are a few examples of real world Re
 - CGANNNNNNTGC -> 4096 combinations
 - CCANNNNNNNNNTGG -> 262,144 combinations
  
-To manage this particular data I decided to use a tree data structure, as many sequences would “share” most of their sequence with only a few differences between them, and then to use a recursive depth first search to find the matches. I chose this approach because linked lists are memory efficient, can be searched quickly and technically it was a new challenge.
+To manage this particular data I decided to use a tree data structure, as many sequences would “share” most of their sequence with only a few differences between them, and then to use a recursive depth first search to find the matches. I chose this approach because linked lists are memory efficient (think combinatorial expansion and memory), can be searched quickly and technically it was a new challenge.
 
 This tool is capable of searching DNA sequences many thousands of characters long and listing all the matches it finds from a file of over 100 restriction enzyme sequences, which vary in length and combinatorial complexity.
 

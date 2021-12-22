@@ -8,7 +8,7 @@ Using variations in spellings as an example, searching for the English and Ameri
 In biology we use the [IUPAC ambiguity codes](https://www.bioinformatics.org/sms/iupac.html) to represent the various “spellings”. For example, the unique, non-ambiguous, sequence ATTGCC is very specific and has no variations or ambiguity. However, the letter N in a sequence means it can be any of the 4 bases A, T, G or C so ANTGCC would expand to any of the following sequences: ATTGCC, AGTGCC, ACTGCC or AATGCC.
 
 Again not to complex, however, the following are a few examples of real world Restriction Enzyme recognition sequences and the number of combinations they expand into.
-- NNCASTGNN -> 512 (S can be either G or C and N can be any of A, T, G or C)
+- NNCASTGNN -> 512 combinations (S can be either G or C and N can be any of A, T, G or C)
 - CGANNNNNNTGC -> 4096 combinations
 - CCANNNNNNNNNTGG -> 262,144 combinations
  
